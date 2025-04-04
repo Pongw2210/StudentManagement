@@ -12,7 +12,7 @@
                     </li>
                     {%if current_user.is_authenticated%}
                     <li class="nav-item">
-                        <a class="nav-link" href="/login">
+                        <a class="nav-link" href="/user_info">
                             <img src="{{current_user.avatar}}" width="25" style="border-radius: 50%;">{{current_user.name}}
                         </a>
                     </li>

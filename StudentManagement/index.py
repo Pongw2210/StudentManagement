@@ -36,5 +36,10 @@ def logout_my_user():
     logout_user()
     return redirect('/login')
 
+@app.route('/user_info')
+def user_info():
+
+    return render_template('user_info.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
