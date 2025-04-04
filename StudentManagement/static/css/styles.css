@@ -56,15 +56,7 @@
     padding: 10px;
 }
 
-.image-container {
-    width: 1400px; /* Chiều rộng cố định */
-    height: 650px; /* Chiều cao cố định */
-    overflow: hidden; /* Ẩn phần ảnh vượt ra ngoài phần tử */
-}
 
-.image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Kéo dài ảnh để phủ đầy phần tử mà không bị méo */
-}
+
+
 

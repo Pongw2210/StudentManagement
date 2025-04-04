@@ -2,6 +2,7 @@ from StudentManagement import app,db
 from enum import Enum as RoleEnum
 from sqlalchemy import Column,Integer,String,Enum
 from flask_login import UserMixin
+import hashlib
 
 class UserEnum(RoleEnum):
     GIAOVIEN = 1
@@ -25,9 +26,18 @@ class User(Base, UserMixin):
 
 if __name__ =="__main__":
     with app.app_context():
+        # db.drop_all()
         db.create_all()
-        import hashlib
-        u = User(name="Nguyen Van A", username="userA", password=str(hashlib.md5("123".encode('utf-8')).hexdigest()))
 
-        db.session.add(u)
+        u1 = User(name="Nguyen Van A", username="userGVu", password=str(hashlib.md5("123".encode('utf-8')).hexdigest()))
+        u2 = User(name="Nguyen Van B", username="userGVien", password=str(hashlib.md5("123".encode('utf-8')).hexdigest()),
+                  avatar="https://static.vecteezy.com/system/resources/previews/019/896/012/large_2x/female-user-avatar-icon-in-flat-design-style-person-signs-illustration-png.png",
+                  role=UserEnum.GIAOVIEN)
+        u3 = User(name="Nguyen Van C", username="userPHuynh", password=str(hashlib.md5("123".encode('utf-8')).hexdigest()),
+                  avatar="https://www.pngmart.com/files/22/User-Avatar-Profile-PNG-Isolated-Clipart.png",
+                  role=UserEnum.PHUHUYNH)
+
+        user=[u1,u2,u3]
+
+        db.session.add_all(user)
         db.session.commit()
