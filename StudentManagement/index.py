@@ -41,5 +41,10 @@ def user_info():
 
     return render_template('user_info.html')
 
+@app.route('/register_student')
+def register_student():
+
+    return render_template('register_student.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
