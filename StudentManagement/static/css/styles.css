@@ -38,13 +38,13 @@
 }
 
 .custom-footer h3 {
-    font-size: 40px;
-    margin-bottom: 5px;
+    font-size: 20px;
+    margin-bottom: 1px;
 
 }
 
 .custom-footer p {
-    font-size: 20px;
+    font-size: 14px;
 }
 
 /* Đảm bảo section chiếm toàn bộ màn hình */
@@ -67,38 +67,176 @@
     padding: 10px;
 }
 
-body{
-    background: -webkit-linear-gradient(left, #3931af, #00c6ff);
+body {
+  /* Giữ lại background gradient */
+ /* background: linear-gradient(to right, #3931af, #00c6ff); /* Bản chuẩn */
+  background: -webkit-linear-gradient(left, #3931af, #00c6ff); /* Tương thích Safari/Chrome cũ */
+
 }
-.emp-profile{
-    padding: 3%;
-    margin-top: 3%;
-    margin-bottom: 3%;
-    border-radius: 0.5rem;
-    background: #fff;
+
+.emp-profile {
+  padding: 30px; /* Tăng padding cố định thay vì % */
+  margin-top: 50px; /* Tăng margin trên */
+  margin-bottom: 50px; /* Tăng margin dưới */
+  border-radius: 15px; /* Bo góc nhiều hơn */
+  background: #fff;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* Thêm đổ bóng */
+  max-width: 800px; /* Giới hạn chiều rộng tối đa */
+  margin-left: auto; /* Căn giữa thẻ */
+  margin-right: auto;
 }
-.profile-img{
-    text-align: center;
+
+.profile-img {
+  text-align: center;
+  margin-bottom: 20px; /* Thêm khoảng cách dưới avatar trên mobile */
 }
-.profile-img img{
-    width: 70%;
-    height: 100%;
+
+.profile-img img {
+  width: 120px; /* Kích thước cố định lớn hơn */
+  height: 120px;
+  object-fit: cover; /* Đảm bảo ảnh không bị méo */
+  border-radius: 50%; /* Bo tròn thành hình tròn */
+  border: 4px solid #eee; /* Thêm viền nhẹ */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Đổ bóng cho avatar */
 }
+
+/* Ẩn phần upload file nếu không dùng */
 .profile-img .file {
-    position: relative;
-    overflow: hidden;
-    margin-top: -20%;
-    width: 70%;
-    border: none;
-    border-radius: 0;
-    font-size: 15px;
-    background: #212529b8;
+  display: none;
 }
-.profile-img .file input {
-    position: absolute;
-    opacity: 0;
-    right: 0;
-    top: 0;
+
+.profile-head {
+  padding-left: 20px; /* Thêm khoảng đệm trái cho phần đầu */
+}
+
+.profile-head h5 { /* Tên người dùng */
+  color: #333;
+  font-size: 2rem; /* Tăng kích thước tên */
+  font-weight: 600;
+  margin-bottom: 5px; /* Giảm khoảng cách dưới */
+}
+
+.profile-head h6 { /* Vai trò/Chức vụ */
+  color: #667eea; /* Màu tím/xanh nhạt đẹp hơn */
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 25px; /* Tăng khoảng cách dưới trước khi tới tabs */
+}
+
+/* Ẩn nút sửa và rating nếu không dùng */
+.profile-edit-btn,
+.profile-rating {
+  display: none;
+}
+
+/* --- Tinh chỉnh Tabs --- */
+.profile-head .nav-tabs {
+  margin-bottom: 0; /* Xóa margin dưới của container tabs */
+  border-bottom: 1px solid #dee2e6; /* Thêm đường kẻ dưới cho toàn bộ thanh tab */
+}
+
+.profile-head .nav-tabs .nav-link {
+  font-weight: 500; /* Giảm độ đậm 1 chút */
+  border: none;
+  border-bottom: 3px solid transparent; /* Viền dưới trong suốt mặc định */
+  color: #6c757d; /* Màu xám cho tab không active */
+  padding: 0.8rem 1rem; /* Điều chỉnh padding */
+  transition: all 0.3s ease; /* Hiệu ứng mượt */
+  margin-right: 5px;
+}
+
+.profile-head .nav-tabs .nav-link:hover {
+  border-bottom-color: #ddd; /* Hiện viền dưới nhẹ khi hover */
+  color: #333;
+}
+
+.profile-head .nav-tabs .nav-link.active {
+  border: none; /* Bỏ viền mặc định của bootstrap */
+  border-bottom: 3px solid #667eea; /* Viền dưới màu tím/xanh */
+  color: #667eea; /* Màu chữ trùng màu viền */
+  font-weight: 600; /* Đậm hơn khi active */
+  background-color: transparent; /* Bỏ nền nếu có */
+}
+
+/* --- Tinh chỉnh nội dung Tab --- */
+.profile-tab {
+  padding-top: 30px; /* Tăng khoảng cách từ tab đến nội dung */
+}
+
+/* Bỏ phần .profile-work nếu không dùng cấu trúc đó */
+/* .profile-work { display: none; } */
+
+/* Style cho các dòng chi tiết */
+.profile-tab .detail-item.row { /* Chọn cụ thể các hàng là detail-item */
+  margin-bottom: 15px; /* Khoảng cách giữa các dòng thông tin */
+  padding-bottom: 15px; /* Đệm dưới */
+  border-bottom: 1px dashed #eee; /* Đường kẻ đứt phân cách */
+  align-items: center; /* Căn giữa label và value theo chiều dọc */
+}
+.profile-tab .detail-item.row:last-child {
+   border-bottom: none; /* Bỏ đường kẻ cho dòng cuối */
+   margin-bottom: 0;
+   padding-bottom: 0;
+}
+
+
+.profile-tab label {
+  font-weight: 500; /* Độ đậm vừa phải */
+  color: #555; /* Màu label xám hơn */
+  font-size: 0.95rem;
+}
+
+.profile-tab p {
+  font-weight: 600; /* Value đậm hơn label */
+  color: #333; /* Màu value đen rõ ràng */
+  margin-bottom: 0; /* Bỏ margin dưới của thẻ p */
+  font-size: 0.95rem;
+  word-break: break-word; /* Tránh text dài làm vỡ layout */
+}
+
+/* --- Responsive (Ví dụ cho màn hình nhỏ hơn 768px) --- */
+@media (max-width: 767.98px) {
+  .emp-profile {
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  .profile-head {
+    padding-left: 0; /* Bỏ padding trái trên mobile */
+    text-align: center; /* Căn giữa tên, vai trò */
+    margin-top: 20px; /* Thêm khoảng cách trên phần đầu */
+  }
+
+  .profile-head h5 {
+    font-size: 1.6rem; /* Giảm kích thước tên chút */
+  }
+   .profile-head h6 {
+    font-size: 1rem; /* Giảm kích thước vai trò */
+    margin-bottom: 20px;
+  }
+
+  .profile-head .nav-tabs {
+     justify-content: center; /* Căn giữa các tab */
+  }
+  .profile-head .nav-tabs .nav-link {
+     padding: 0.6rem 0.8rem; /* Giảm padding tab */
+  }
+
+  .profile-tab {
+     padding-top: 20px;
+  }
+
+  .profile-tab .detail-item.row > div { /* Các cột trong detail item */
+      text-align: left !important; /* Căn trái hết trên mobile */
+      margin-bottom: 5px; /* Thêm khoảng cách nếu label/value xếp chồng */
+  }
+   .profile-tab label {
+     font-size: 0.9rem;
+   }
+   .profile-tab p {
+     font-size: 0.9rem;
+   }
 }
 .profile-head h5{
     color: #333;
@@ -120,7 +258,7 @@ body{
     color: #818182;
     margin-top: 5%;
 }
-.proile-rating span{
+.profile-rating span{
     color: #495057;
     font-size: 15px;
     font-weight: 600;
@@ -164,6 +302,7 @@ body{
     color: #0062cc;
 }
 
+
 .container-fluid a.navbar-brand{
     font-size:30px;
     font-weight:bold;
@@ -172,4 +311,27 @@ body{
      font-size:20px;
      color: #ffcc00 !important;
      line-height: 30px;
+     height: 40px;
+     width: 100px;
+
 }
+.dropdown ul.dropdown-menu a{
+    color:white;
+    padding:5px;
+    border-bottom: 1px solid #fff;
+    /*border-right: 1px solid #fff;*/
+    background-color: #667eea;
+    /*box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);*/
+    /*z-index: 1;*/
+
+
+}
+.dropdown ul.dropdown-menu li:hover a{
+
+     background-color:  #ffcc00  !important;
+}
+/*.dropdown button.btn.btn-primary.dropdown-toggle.show{
+    font-size:20px;
+    align-items: center;
+
+}*/
