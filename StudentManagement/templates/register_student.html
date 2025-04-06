@@ -7,13 +7,14 @@
 {%block content%}
 <form id="form_register">
     <div class="container mt-3">
-        <h2>Tiếp Nhận Học Sinh</h2>
+        <h2 class="text text-primary">Tiếp Nhận Học Sinh</h2>
         <form action="submit_form.php" method="post">
             <label for="fullname">Họ và Tên:</label>
             <input type="text" id="fullname" name="fullname" required>
-
-            <label for="dob">Ngày Sinh:</label>
-            <input type="date" id="dob" name="dob" required>
+            <form lang="vi">
+                <label for="dob">Ngày Sinh:</label>
+                <input type="date" id="dob" name="dob" required>
+            </form>
 
             <label>Giới Tính:</label>
             <select name="gender" id="gender" required>
@@ -25,26 +26,20 @@
             <textarea id="address" name="address" rows="3" required></textarea>
 
             <label for="phone">Số Điện Thoại:</label>
-            <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" title="Phone number must be 10 digits" required><br><br>
+            <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" title="Phone number must be 10 digits"
+                   required><br><br>
 
             <label for="email">Email:</label>
             <input type="email" id="email" name="email">
 
-            <label for="grade">Khối:</label>
-            <select class="form-select w-25 mb-3" name="grade" id="grade" required>
-                <option value="Lớp 1">Lớp 1</option>
-                <option value="Lớp 2">Lớp 2</option>
-                <option value="Lớp 3">Lớp 3</option>
-                <option value="Lớp 4">Lớp 4</option>
-                <option value="Lớp 5">Lớp 5</option>
-            </select>
-            <div class="btn-group d-flex justify-content-start gap-3">
+            <div class="btn-group d-flex justify-content-start gap-3 mt-3">
                 <button type="button" class="btn btn-primary" onclick="save()">Lưu</button>
                 <button type="button" class="btn btn-success" onclick="saveDraft()">Lưu nháp</button>
                 <button type="button" class="btn btn-warning" onclick="deleteAll()">Xóa tất cả</button>
                 <button type="button" class="btn btn-danger" onclick="cancelSession()">Hủy</button>
 
             </div>
+            <div id="responseMessage" class="mt-3"></div>
 
         </form>
     </div>
