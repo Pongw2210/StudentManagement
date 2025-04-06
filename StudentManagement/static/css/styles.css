@@ -1,16 +1,26 @@
-
 /*Tăng kích thước và khoảng cách giữa các mục */
 .navbar-brand {
-    font-size: 1.5rem;
+    font-size: 15rem;
     font-weight: bold;
-    padding: 10px 15px;
+    padding: 10px 10px;
+     padding-top: 0.5rem; /* Điều chỉnh padding nếu cần */
+    padding-bottom: 0.5rem;
 }
 
+
 .navbar-nav .nav-link {
+
     font-size: 1.2rem;
     padding: 10px 18px;
     transition: color 0.3s ease-in-out;
+    padding-left: 3rem !important; /* Tăng khoảng cách trái */
+    padding-right: 3rem !important; /* Tăng khoảng cách phải */
+
+
+
 }
+
+
 
 /* Hiệu ứng hover (di chuột vào) */
 .navbar-nav .nav-link:hover {
@@ -20,7 +30,7 @@
 
 .custom-footer {
     padding: 10px;
-    font-size: 14px;
+    font-size: 20px;
     background-color: #007bff;
     color: white;
     border-radius: 8px;
@@ -28,12 +38,13 @@
 }
 
 .custom-footer h3 {
-    font-size: 20px;
+    font-size: 40px;
     margin-bottom: 5px;
+
 }
 
 .custom-footer p {
-    font-size: 12px;
+    font-size: 20px;
 }
 
 /* Đảm bảo section chiếm toàn bộ màn hình */
@@ -109,7 +120,7 @@ body{
     color: #818182;
     margin-top: 5%;
 }
-.profile-rating span{
+.proile-rating span{
     color: #495057;
     font-size: 15px;
     font-weight: 600;
@@ -130,6 +141,7 @@ body{
     margin-top: -15%;
 }
 .profile-work p{
+
     font-size: 12px;
     color: #818182;
     font-weight: 600;
@@ -152,6 +164,12 @@ body{
     color: #0062cc;
 }
 
-
-
-
+.container-fluid a.navbar-brand{
+    font-size:30px;
+    font-weight:bold;
+}
+.dropdown button:hover{
+     font-size:20px;
+     color: #ffcc00 !important;
+     line-height: 30px;
+}
