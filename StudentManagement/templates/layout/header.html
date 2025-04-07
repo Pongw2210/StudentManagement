@@ -13,7 +13,18 @@
                     {%if current_user.is_authenticated%}
                     <li class="nav-item">
                         <a class="nav-link" href="/user_info">
-                            <img src="{{current_user.avatar}}" width="25" style="border-radius: 50%;">{{current_user.name}}
+                            <img src="{{ current_user.avatar }}" width="25" style="border-radius: 50%;">
+                            {% if current_user.teacher %}
+                            {{ current_user.teacher.fullname }}
+                            {% elif current_user.staff %}
+                            {{ current_user.staff.fullname }}
+                            {% elif current_user.parent %}
+                            {{ current_user.parent.fullname }}
+                            {% elif current_user.admin %}
+                            {{ current_user.admin.fullname }}
+                            {% else %}
+                            {{ current_user.username }}
+                            {% endif %}
                         </a>
                     </li>
                     <div class="dropdown">
@@ -23,7 +34,7 @@
                         <ul class="dropdown-menu">
                             {%if current_user.role.name=="GIAOVU"%}
                             <li><a class="dropdown-item" href="/register_student">Tiếp nhận học sinh </a></li>
-                            <li><a class="dropdown-item" href="#"> Lập danh sách lớp </a></li>
+                            <li><a class="dropdown-item" href="/add_class"> Lập danh sách lớp </a></li>
                             <li><a class="dropdown-item" href="#"> Điều chỉnh lớp học</a></li>
 
                             {%elif current_user.role.name=="GIAOVIEN"%}

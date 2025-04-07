@@ -15,15 +15,22 @@
             <!-- Cột thông tin người dùng -->
             <div class="col-md-6">
                 <div class="profile-head">
-                    <h5>{{ current_user.name }}</h5>
-                    <h6>
-                        {% if current_user.role.name == "GIAOVU" %}
-                        Giáo vụ
-                        {% elif current_user.role.name == "GIAOVIEN" %}
-                        Giáo viên
-                        {% elif current_user.role.name == "PHUHUYNH" %}
-                        Phụ huynh
+                    <h5>
+                        {% if current_user.teacher %}
+                            {{ current_user.teacher.fullname }}
+                        {% elif current_user.staff %}
+                            {{ current_user.staff.fullname }}
+                        {% elif current_user.parent %}
+                            {{ current_user.parent.fullname }}
+                        {% elif current_user.admin %}
+                            {{ current_user.admin.fullname }}
+                        {% else %}
+                            {{ current_user.username }}
                         {% endif %}
+                    </h5>
+
+                    <h6>
+                        {{ current_user.role.value }}
                     </h6>
 
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -41,18 +48,48 @@
             <div class="col-md-8 offset-md-4">
                 <div class="tab-content profile-tab" id="myTabContent">
                     <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+
                         <div class="row">
                             <div class="col-md-6"><label>ID Người dùng</label></div>
                             <div class="col-md-6"><p>{{ current_user.id }}</p></div>
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6"><label>Tên đăng nhập</label></div>
+                            <div class="col-md-6"><p>{{ current_user.username }}</p></div>
+                        </div>
+
+                        {% set person = current_user.teacher or current_user.staff or current_user.parent or current_user.admin %}
+
+                        {% if person %}
                         <div class="row">
                             <div class="col-md-6"><label>Họ và Tên</label></div>
-                            <div class="col-md-6"><p>{{ current_user.name }}</p></div>
+                            <div class="col-md-6"><p>{{ person.fullname }}</p></div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6"><label>Email</label></div>
+                            <div class="col-md-6"><p>{{ person.email }}</p></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6"><label>Giới tính</label></div>
+                            <div class="col-md-6"><p>{{ person.gender }}</p></div>
+                        </div>
+                        {% if current_user.parent %}
+                        <div class="row">
+                            <div class="col-md-6"><label>Địa chỉ</label></div>
+                            <div class="col-md-6"><p>{{ current_user.parent.address }}</p></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6"><label>Số điện thoại</label></div>
+                            <div class="col-md-6"><p>{{ current_user.parent.phone }}</p></div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+
                     </div>
                 </div>
             </div>
         </div>
     </form>
 </div>
-{%endblock%}
+{% endblock %}

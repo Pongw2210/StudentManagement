@@ -3,7 +3,7 @@ from StudentManagement import app,login,db
 from flask_login import current_user,login_user,logout_user
 import dao
 from datetime import datetime
-from models import Student
+from models import Student,GradeEnum
 
 @app.route('/')
 def home():
@@ -105,6 +105,13 @@ def save_student():
     except Exception as e:
         db.session.rollback()  # Rollback nếu có lỗi
         return jsonify({"success": False, "message": "Có lỗi xảy ra khi lưu dữ liệu: " + str(e)})
+
+@app.route('/add_class')
+def add_class():
+    grades=dao.load_gradeEnum()
+    teachers=dao.load_teachers()
+    students=dao.load_students()
+    return render_template("add_class.html",grades=grades,teachers=teachers,students=students)
 
 if __name__ == '__main__':
     app.run(debug=True)
