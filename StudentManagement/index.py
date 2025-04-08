@@ -1,9 +1,13 @@
+from types import new_class
+
 from flask import Flask, render_template,request,redirect,session,jsonify
-from StudentManagement import app,login,db
+from StudentManagement import app,login,db,max_student
 from flask_login import current_user,login_user,logout_user
 import dao
 from datetime import datetime
-from models import Student,GradeEnum
+
+from models import Student, GradeEnum, Class,Teacher_Class,Student_Class
+
 
 @app.route('/')
 def home():
@@ -109,9 +113,53 @@ def save_student():
 @app.route('/add_class')
 def add_class():
     grades=dao.load_gradeEnum()
-    teachers=dao.load_teachers()
-    students=dao.load_students()
-    return render_template("add_class.html",grades=grades,teachers=teachers,students=students)
+    available_teachers=dao.load_teachers_with_assign_status()
+    available_students=dao.load_students_with_assign_status()
+    return render_template("add_class.html",grades=grades,
+                           available_teachers=available_teachers,available_students=available_students)
+
+@app.route('/api/save_class', methods=['POST'])
+def save_class():
+    data = request.get_json()
+    classname = data.get("classname")
+    grade = data.get("grade")
+    teacher_id = data.get("teacher_id")
+    student_ids = data.get("student_ids")
+
+    # Kiểm tra tất cả trường phải được điền đầy đủ
+    if not classname or not grade or not teacher_id:
+        return jsonify({"success": False, "message": "Tất cả các trường phải được điền đầy đủ!"})
+
+    # Kiểm tra nếu số lượng học sinh đã chọn vượt quá sĩ số lớp
+    if len(student_ids) > max_student:
+        return jsonify({'success': False, 'message': 'Số lượng học sinh 1 lớp không quá 40 học sinh'})
+
+    # Kiểm tra xem lớp học đã tồn tại chưa
+    existing_class = Class.query.filter_by(name=classname).first()
+    if existing_class:
+        return jsonify({'success': False, 'message': 'Lớp học đã tồn tại'})
+
+    # Tạo lớp học mới
+    new_class = Class(name=classname, grade=grade, number_of_students=len(student_ids))
+    db.session.add(new_class)
+    db.session.commit()
+
+    # Liên kết giáo viên chủ nhiệm với lớp
+    teacher_class = Teacher_Class(teacher_id=teacher_id, class_id=new_class.id, time=datetime.now())
+    db.session.add(teacher_class)
+    db.session.commit()
+
+    # Liên kết học sinh với lớp
+    for student_id in student_ids:
+        student = Student.query.get(student_id)
+        if student and not student.classes:  # chỉ thêm nếu chưa có lớp nào
+            student_class = Student_Class(student_id=student_id, class_id=new_class.id, date_of_join=datetime.now())
+            db.session.add(student_class)
+
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Lớp học đã được tạo thành công.'})
+
 
 if __name__ == '__main__':
     app.run(debug=True)

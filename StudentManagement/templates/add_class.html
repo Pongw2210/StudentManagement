@@ -11,16 +11,18 @@
 
             <label for="grade">Khối:</label>
             <select name="grade" id="grade" required>
-                {% for g in grades %}
-                    <option value="{{ g }}">{{ g }}</option>
+                {% for key, label in grades.items() %}
+                <option value="{{ key }}">{{ label }}</option>
                 {% endfor %}
             </select>
 
             <label for="teacher">Giáo viên chủ nhiệm:</label>
             <select name="teacher" id="teacher" class="form-select select2" required>
                 <option value="">-- Chọn giáo viên --</option>
-                {% for t in teachers %}
-                    <option value="{{ t.fullname }}">{{ t.fullname }}</option>
+                {% for t in available_teachers %}
+                <option value="{{ t.id }}" {% if t.assigned %}disabled{% endif %}>
+                    {{ t.fullname }}{% if t.assigned %} (Đã có lớp){% endif %}
+                </option>
                 {% endfor %}
             </select>
 
@@ -40,9 +42,18 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for s in students %}
+                    {% for s in available_students %}
                     <tr>
-                        <td><input type="checkbox" name="student_ids" value="{{ s.id }}"></td>
+                        <td>
+                            {% if s.assigned %}
+                            <div style="pointer-events: none; opacity: 0.6;"
+                                 title="Học sinh đã được phân lớp. Không thể chọn.">
+                                <input type="checkbox" checked>
+                            </div>
+                            {% else %}
+                            <input type="checkbox" name="student_ids" value="{{ s.id }}">
+                            {% endif %}
+                        </td>
                         <td>{{ s.id }}</td>
                         <td>{{ s.fullname }}</td>
                         <td>{{ s.dob.strftime('%d/%m/%Y') }}</td>

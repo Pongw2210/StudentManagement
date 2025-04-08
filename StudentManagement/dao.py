@@ -1,7 +1,5 @@
 import hashlib
-
-from StudentManagement.models import Teacher
-from models import User,GradeEnum,Teacher,Student
+from models import User,GradeEnum,Teacher,Student,Teacher_Class
 
 #--------------XỬ LÝ LOGIN---------------------------------------------------------|
 def get_user_by_id(user_id):
@@ -16,12 +14,24 @@ def auth_user(username, password):
 #--------------XỬ LÝ LẬP DANH SÁCH LỚP---------------------------------------------------------|
 
 def load_gradeEnum():
-    return [grade.value for grade in GradeEnum]
+    return {
+        grade.name: grade.value  # "KHOI_10": "Khối 10"
+        for grade in GradeEnum
+    }
 
-def load_teachers():
-    return Teacher.query.all()
+def load_teachers_with_assign_status():
+    teachers = Teacher.query.all()
+    for t in teachers:
+        t.assigned = len(t.classes) > 0
+    return teachers
 
-def load_students():
-    return Student.query.all()
+
+def load_students_with_assign_status():
+    students = Student.query.all()
+    for s in students:
+        s.assigned = len(s.classes) > 0
+    return students
+
+
 
 #-------------- END XỬ LÝ LẬP DANH SÁCH LỚP---------------------------------------------------------|

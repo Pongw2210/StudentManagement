@@ -50,7 +50,7 @@ function validateAge(dob) {
 }
 
 function saveStudent() {
-    var form = document.getElementById('form_register');
+    var form = document.getElementById('form_register_student');
     var dob = document.getElementById('dob').value;
     var phone = document.getElementById('phone').value;
     var email = document.getElementById('email').value;
@@ -99,6 +99,9 @@ function saveStudent() {
         } else {
             document.getElementById('responseMessage').innerHTML = '<p style="color: red;">' + data.message + '</p>';
         }
+    }).catch(error => {
+    // Xử lý lỗi
+    document.getElementById('responseMessage').innerHTML = '<p style="color: red;">Lỗi: ' + error.message + '</p>';
     });
 }
 
@@ -115,26 +118,16 @@ $('#teacher').select2({
     });
 });
 
-//// Tìm kiếm học sinh
-//document.getElementById('studentSearch').addEventListener('input', function() {
-//    let filter = this.value.toLowerCase();
-//    let rows = document.querySelectorAll('#studentTable tbody tr');
-//    rows.forEach(row => {
-//        let name = row.querySelector('td:nth-child(3)').innerText.toLowerCase();
-//        if (name.includes(filter)) {
-//            row.style.display = '';
-//        } else {
-//            row.style.display = 'none';
-//        }
-//    });
-//});
 
 // Chọn tất cả học sinh
 function toggleSelectAll() {
-    let checkboxes = document.querySelectorAll('input[name="student_ids"]');
-    let selectAll = document.getElementById('selectAllStudents').checked;
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAll;
+    const selectAll = document.getElementById('selectAllStudents');
+    const checkboxes = document.querySelectorAll('input[name="student_ids"]');
+
+    checkboxes.forEach(cb => {
+    if (!cb.disabled) {
+        cb.checked = selectAll.checked;
+        }
     });
 }
 
@@ -205,5 +198,68 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+
+function saveClass() {
+    var form = document.getElementById('form_add_class');
+    var classname = document.getElementById('classname').value;
+    var grade = document.getElementById('grade').value;
+    var teacher_id = document.getElementById('teacher').value;
+    var student_ids = Array.from(document.querySelectorAll('input[name="student_ids"]:checked'))
+    .map(input => input.value);
+
+    var max_students = 40;
+
+    // Kiểm tra các trường trống
+    if (classname === '' || grade === '' || teacher_id === '') {
+       document.getElementById('responseMessage').innerHTML = '<p style="color: red;">Tất cả các trường phải được điền đầy đủ!</p>';
+       return;
+    }
+
+    // Kiểm tra nếu số lượng học sinh đã chọn vượt quá sĩ số lớp
+    if (student_ids.length > max_students) {
+        document.getElementById('responseMessage').innerHTML = '<p style="color: red;">Số lượng học sinh không được vượt quá ' + max_students + ' học sinh!</p>';
+        return;
+    }
+
+    // Tiến hành gửi form nếu tất cả đều hợp lệ
+    var formData = {
+        classname: classname,
+        grade: grade,
+        teacher_id: teacher_id,
+        student_ids: student_ids
+    };
+
+    fetch('/api/save_class', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(res => {
+        // Kiểm tra xem phản hồi có phải là JSON không
+        console.log(res);
+        return res.json();  // Chuyển đổi phản hồi thành JSON
+    })
+    .then(data => {
+        if (data.success) {
+            document.getElementById('responseMessage').innerHTML = '<p style="color: green;">' + data.message + '</p>';
+            setTimeout(() => {
+                location.reload();  // 💡 Reload lại toàn bộ trang
+            }, 1500); // cho người dùng thấy message 1.5 giây trước khi reload
+        } else {
+            document.getElementById('responseMessage').innerHTML = '<p style="color: red;">' + data.message + '</p>';
+        }
+    })
+    .catch(error => {
+        console.log(error); // Log lỗi vào console để kiểm tra
+        document.getElementById('responseMessage').innerHTML = '<p style="color: red;">Lỗi: ' + error.message + '</p>';
+    });
+}
+
+
+
+
 
 //--------------- END XỬ LÝ FORM LẬP DANH SÁCH LỚP HỌC----------------------

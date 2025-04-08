@@ -11,3 +11,5 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 
 db = SQLAlchemy(app)
 login = LoginManager(app)
+
+max_student=40

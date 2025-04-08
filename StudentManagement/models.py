@@ -109,60 +109,64 @@ class Class(Base):
 
 if __name__ =="__main__":
     with app.app_context():
-        db.drop_all()
-        # db.create_all()
-        #
-        # teacher1=Teacher(fullname="Nguyễn Ngọc Anh",email="nna@gmail.com",gender="Nữ")
-        # db.session.add(teacher1)
-        # uTeacher1 = User(username="userGVien", password=str(hashlib.md5("123".encode('utf-8')).hexdigest()),
-        #           avatar="https://static.vecteezy.com/system/resources/previews/019/896/012/large_2x/female-user-avatar-icon-in-flat-design-style-person-signs-illustration-png.png",
-        #           role=UserEnum.GIAOVIEN)
-        # uTeacher1.teacher = teacher1
-        # db.session.add(uTeacher1)
-        # db.session.commit()
-        #
-        #
-        # staff1 = Staff(fullname="Trần Bảo Ngọc", email="tbn@gmail.com", gender="Nữ")
-        # db.session.add(staff1)
-        # uStaff1 = User(username="userGVu", password=str(hashlib.md5("123".encode('utf-8')).hexdigest()))
-        # uStaff1.staff=staff1
-        # db.session.add(uStaff1)
-        # db.session.commit()
-        #
-        # parent1 = Parent(fullname="Ngô Khánh Ngân", email="nkn@gmail.com", gender="Nữ", address="Nhà Bè",phone="0123456789")
-        # db.session.add(parent1)
-        # uParent1 = User(username="userPHuynh", password=str(hashlib.md5("123".encode('utf-8')).hexdigest()),
-        #                 avatar="https://www.pngmart.com/files/22/User-Avatar-Profile-PNG-Isolated-Clipart.png",
-        #                 role=UserEnum.PHUHUYNH)
-        # uParent1.parent=parent1
-        # db.session.add(uParent1)
-        # db.session.commit()
-        #
-        #
-        # student1=Student(fullname="Bùi Thiên Ân",dob="2008-10-22",gender="Nam",address="123,abc",phone="0978123456",email="bta1@gmail.com")
-        # db.session.add(student1)
-        # db.session.commit()
-        #
-        # teacher2=Teacher(fullname="Tần Minh Ngọc",email="tmn@gmail.com",gender="Nam")
-        # teacher3 = Teacher(fullname="Phạm Ái Linh", email="pal@gmail.com", gender="Nữ")
-        # teacher4 = Teacher(fullname="Lê Bảo An", email="lba@gmail.com", gender="Nam")
-        # teacher5 = Teacher(fullname="Đỗ Quang Khải", email="dqk@gmail.com", gender="Nam")
-        # db.session.add_all([teacher2,teacher3,teacher4,teacher5])
-        # db.session.commit()
-        #
-        # class1 = Class(name="10A1", number_of_students=40, grade=GradeEnum.KHOI_10)
-        # db.session.add(class1)
-        # class2 = Class(name="11A1", number_of_students=40, grade=GradeEnum.KHOI_11)
-        # db.session.add(class2)
-        # class3 = Class(name="12A1", number_of_students=40, grade=GradeEnum.KHOI_12)
-        # db.session.add(class3)
-        # db.session.commit()
-        #
-        # # Liên kết học sinh với lớp
-        # student_class = Student_Class(student_id=student1.id, class_id=class1.id,date_of_join=datetime.now())
-        # db.session.add(student_class)
-        # db.session.commit()
-        #
-        # teacher_class = Teacher_Class(teacher_id=teacher2.id, class_id=class1.id,time=datetime.now())
-        # db.session.add(teacher_class)
-        # db.session.commit()
+        # db.drop_all()
+        db.create_all()
+
+        teacher1=Teacher(fullname="Nguyễn Ngọc Anh",email="nna@gmail.com",gender="Nữ")
+        db.session.add(teacher1)
+        uTeacher1 = User(username="userGVien", password=str(hashlib.md5("123".encode('utf-8')).hexdigest()),
+                  avatar="https://static.vecteezy.com/system/resources/previews/019/896/012/large_2x/female-user-avatar-icon-in-flat-design-style-person-signs-illustration-png.png",
+                  role=UserEnum.GIAOVIEN)
+        uTeacher1.teacher = teacher1
+        db.session.add(uTeacher1)
+        db.session.commit()
+
+
+        staff1 = Staff(fullname="Trần Bảo Ngọc", email="tbn@gmail.com", gender="Nữ")
+        db.session.add(staff1)
+        uStaff1 = User(username="userGVu", password=str(hashlib.md5("123".encode('utf-8')).hexdigest()))
+        uStaff1.staff=staff1
+        db.session.add(uStaff1)
+        db.session.commit()
+
+        parent1 = Parent(fullname="Ngô Khánh Ngân", email="nkn@gmail.com", gender="Nữ", address="Nhà Bè",phone="0123456789")
+        db.session.add(parent1)
+        uParent1 = User(username="userPHuynh", password=str(hashlib.md5("123".encode('utf-8')).hexdigest()),
+                        avatar="https://www.pngmart.com/files/22/User-Avatar-Profile-PNG-Isolated-Clipart.png",
+                        role=UserEnum.PHUHUYNH)
+        uParent1.parent=parent1
+        db.session.add(uParent1)
+        db.session.commit()
+
+
+        student1=Student(fullname="Bùi Thiên Ân",dob="2008-10-22",gender="Nam",address="123,abc",phone="0978123456",email="bta1@gmail.com")
+        db.session.add(student1)
+        db.session.commit()
+
+        teacher2=Teacher(fullname="Tần Minh Ngọc",email="tmn@gmail.com",gender="Nam")
+        teacher3 = Teacher(fullname="Phạm Ái Linh", email="pal@gmail.com", gender="Nữ")
+        teacher4 = Teacher(fullname="Lê Bảo An", email="lba@gmail.com", gender="Nam")
+        teacher5 = Teacher(fullname="Đỗ Quang Khải", email="dqk@gmail.com", gender="Nam")
+        db.session.add_all([teacher2,teacher3,teacher4,teacher5])
+        db.session.commit()
+
+        class1 = Class(name="10A1", number_of_students=40, grade=GradeEnum.KHOI_10)
+        db.session.add(class1)
+        class2 = Class(name="11A1", number_of_students=40, grade=GradeEnum.KHOI_11)
+        db.session.add(class2)
+        class3 = Class(name="12A1", number_of_students=40, grade=GradeEnum.KHOI_12)
+        db.session.add(class3)
+        db.session.commit()
+
+        # Liên kết học sinh với lớp
+        student_class = Student_Class(student_id=student1.id, class_id=class1.id,date_of_join=datetime.now())
+        db.session.add(student_class)
+        db.session.commit()
+
+        teacher_class = Teacher_Class(teacher_id=teacher2.id, class_id=class1.id,time=datetime.now())
+        db.session.add(teacher_class)
+        db.session.commit()
+
+        teacher = Teacher(fullname="Tần Minh Thư", email="tmn@gmail.com", gender="Nam")
+        db.session.add(teacher)
+        db.session.commit()
