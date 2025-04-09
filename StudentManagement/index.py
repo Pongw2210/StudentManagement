@@ -160,6 +160,72 @@ def save_class():
 
     return jsonify({'success': True, 'message': 'Lớp học đã được tạo thành công.'})
 
+@app.route('/edit_class')
+def edit_class():
+    classes=dao.load_class()
+    teachers=dao.load_teachers_with_assign_status()
+    unassigned_students=dao.load_unassigned_students()
+    return render_template("edit_class.html",classes=classes,teachers=teachers,
+                           unassigned_students=unassigned_students)
+
+@app.route('/api/class_info/<int:class_id>')
+def get_class_info(class_id):
+    cls = Class.query.get(class_id)
+
+    # Tìm giáo viên chủ nhiệm
+    teacher_class = Teacher_Class.query.filter_by(class_id=class_id).first()
+    teacher = teacher_class.teacher if teacher_class else None
+
+    # Lấy danh sách học sinh từ bảng phụ student_class
+    student_data = [{
+        'id': sc.student.id,
+        'fullname': sc.student.fullname,
+        'dob': sc.student.dob.strftime('%d/%m/%Y'),
+        'gender': sc.student.gender,
+        'address': sc.student.address,
+        'phone': sc.student.phone,
+        'email': sc.student.email
+    } for sc in cls.students]
+
+    return jsonify({
+        'teacher_name': teacher.fullname if teacher else 'Chưa có giáo viên',
+        'students': student_data
+    })
+
+@app.route('/api/save_edit_class', methods=['POST'])
+def save_edit_class():
+    data = request.get_json()
+    class_id = data.get("class_id")
+    teacher_id = data.get("teacher_id")
+    student_ids = data.get("student_ids", [])
+
+    if not class_id:
+        return jsonify({'message': 'Thiếu thông tin lớp học!'}), 400
+
+    try:
+        # --- Cập nhật giáo viên chủ nhiệm ---
+        if teacher_id:
+            # Xóa giáo viên cũ (nếu có)
+            Teacher_Class.query.filter_by(class_id=class_id).delete()
+            # Gán giáo viên mới
+            new_tc = Teacher_Class(teacher_id=teacher_id, class_id=class_id)
+            db.session.add(new_tc)
+
+        # --- Cập nhật học sinh ---
+        # Xóa toàn bộ học sinh cũ trong lớp
+        Student_Class.query.filter_by(class_id=class_id).delete()
+
+        # Thêm mới danh sách học sinh (nếu có)
+        for sid in student_ids:
+            sc = Student_Class(student_id=sid, class_id=class_id)
+            db.session.add(sc)
+
+        db.session.commit()
+        return jsonify({'message': 'Cập nhật lớp học thành công!'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Lỗi khi cập nhật: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

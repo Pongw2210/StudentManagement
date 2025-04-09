@@ -2,7 +2,7 @@ from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import relationship
 from StudentManagement import app,db
 from enum import Enum as RoleEnum
-from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey, CheckConstraint
 from datetime import datetime
 from flask_login import UserMixin
 import hashlib
@@ -27,7 +27,7 @@ class Teacher_Class(db.Model):
     __table_args__ = {'extend_existing': True}
     teacher_id = Column(Integer, ForeignKey('teacher.id'), primary_key=True)
     class_id = Column(Integer, ForeignKey('class.id'), primary_key=True)
-    time = Column(DateTime, nullable=False)
+    time = Column(DateTime, default=datetime.now())
 
 
 class Teacher(Base):
@@ -82,7 +82,7 @@ class Student_Class(db.Model):
     __table_args__ = {'extend_existing': True}
     student_id = Column(Integer, ForeignKey('student.id'), primary_key=True)
     class_id = Column(Integer, ForeignKey('class.id'), primary_key=True)
-    date_of_join = Column(DateTime, nullable=False)
+    date_of_join = Column(DateTime, default=datetime.now())
 
 class Student(Base):
     __tablename__="student"
@@ -97,15 +97,15 @@ class Student(Base):
 
 class Class(Base):
     __tablename__="class"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = (
+        CheckConstraint('number_of_students <= 40', name='check_max_students'),
+        {'extend_existing': True}
+    )
     name = Column(String(50),unique=True, nullable=False)
     number_of_students= Column(Integer,default=0)
     grade=Column(Enum(GradeEnum))
     students = relationship(Student_Class, backref="class", lazy=True)
     teachers = relationship(Teacher_Class, backref="class", lazy=True)
-
-
-
 
 if __name__ =="__main__":
     with app.app_context():
@@ -138,9 +138,29 @@ if __name__ =="__main__":
         db.session.add(uParent1)
         db.session.commit()
 
-
-        student1=Student(fullname="Bùi Thiên Ân",dob="2008-10-22",gender="Nam",address="123,abc",phone="0978123456",email="bta1@gmail.com")
-        db.session.add(student1)
+        students = [
+            Student(fullname="Nguyễn Văn An", dob="2008-01-15", gender="Nam", address="123 Lê Lợi", phone="0901000001",
+                    email="an1@gmail.com"),
+            Student(fullname="Trần Thị Bích", dob="2008-02-20", gender="Nữ", address="234 Nguyễn Trãi",
+                    phone="0901000002", email="bich2@gmail.com"),
+            Student(fullname="Lê Minh Khoa", dob="2008-03-05", gender="Nam", address="345 Lý Thường Kiệt",
+                    phone="0901000003", email="khoa3@gmail.com"),
+            Student(fullname="Phạm Ngọc Hân", dob="2008-04-12", gender="Nữ", address="456 Trần Hưng Đạo",
+                    phone="0901000004", email="han4@gmail.com"),
+            Student(fullname="Hoàng Đức Tài", dob="2008-05-25", gender="Nam", address="567 CMT8", phone="0901000005",
+                    email="tai5@gmail.com"),
+            Student(fullname="Đinh Thị Hằng", dob="2008-06-30", gender="Nữ", address="678 Nguyễn Du",
+                    phone="0901000006", email="hang6@gmail.com"),
+            Student(fullname="Bùi Quốc Dũng", dob="2008-07-18", gender="Nam", address="789 Hùng Vương",
+                    phone="0901000007", email="dung7@gmail.com"),
+            Student(fullname="Ngô Thị Yến", dob="2008-08-22", gender="Nữ", address="890 Điện Biên Phủ",
+                    phone="0901000008", email="yen8@gmail.com"),
+            Student(fullname="Đoàn Anh Tuấn", dob="2008-09-10", gender="Nam", address="901 Võ Thị Sáu",
+                    phone="0901000009", email="tuan9@gmail.com"),
+            Student(fullname="Trịnh Thị Mai", dob="2008-10-05", gender="Nữ", address="101 Nguyễn Huệ",
+                    phone="0901000010", email="mai10@gmail.com"),
+        ]
+        db.session.add_all(students)
         db.session.commit()
 
         teacher2=Teacher(fullname="Tần Minh Ngọc",email="tmn@gmail.com",gender="Nam")
@@ -159,7 +179,7 @@ if __name__ =="__main__":
         db.session.commit()
 
         # Liên kết học sinh với lớp
-        student_class = Student_Class(student_id=student1.id, class_id=class1.id,date_of_join=datetime.now())
+        student_class = Student_Class(student_id=students[0].id, class_id=class1.id,date_of_join=datetime.now())
         db.session.add(student_class)
         db.session.commit()
 

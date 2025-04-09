@@ -1,5 +1,5 @@
 import hashlib
-from models import User,GradeEnum,Teacher,Student,Teacher_Class
+from models import User,GradeEnum,Teacher,Student,Teacher_Class,Class
 
 #--------------XỬ LÝ LOGIN---------------------------------------------------------|
 def get_user_by_id(user_id):
@@ -32,6 +32,12 @@ def load_students_with_assign_status():
         s.assigned = len(s.classes) > 0
     return students
 
+def load_class():
+    return Class.query.all()
+
+def load_unassigned_students():
+    # Trả về danh sách các học sinh chưa thuộc bất kỳ lớp nào
+    return Student.query.filter(~Student.classes.any()).all()
 
 
 #-------------- END XỬ LÝ LẬP DANH SÁCH LỚP---------------------------------------------------------|

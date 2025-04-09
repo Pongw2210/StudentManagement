@@ -118,7 +118,6 @@ $('#teacher').select2({
     });
 });
 
-
 // Chọn tất cả học sinh
 function toggleSelectAll() {
     const selectAll = document.getElementById('selectAllStudents');
@@ -133,7 +132,7 @@ function toggleSelectAll() {
 
 //Xử lý phân trang
 $(document).ready(function() {
-    $('#studentTable').DataTable({
+    $('.datatable').DataTable({
         "paging": true,  // Bật phân trang
         "pageLength": 5, // Số lượng bản ghi mỗi trang
         "searching": true, // Bật chức năng tìm kiếm
@@ -199,7 +198,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-
 function saveClass() {
     var form = document.getElementById('form_add_class');
     var classname = document.getElementById('classname').value;
@@ -238,8 +236,8 @@ function saveClass() {
         body: JSON.stringify(formData)
     })
     .then(res => {
-        // Kiểm tra xem phản hồi có phải là JSON không
-        console.log(res);
+//        // Kiểm tra xem phản hồi có phải là JSON không
+//        console.log(res);
         return res.json();  // Chuyển đổi phản hồi thành JSON
     })
     .then(data => {
@@ -257,9 +255,173 @@ function saveClass() {
         document.getElementById('responseMessage').innerHTML = '<p style="color: red;">Lỗi: ' + error.message + '</p>';
     });
 }
-
-
-
-
-
 //--------------- END XỬ LÝ FORM LẬP DANH SÁCH LỚP HỌC----------------------
+
+//---------------  XỬ LÝ FORM ĐIỀU CHỈNH LỚP HỌC----------------------
+
+//Khi nhấn chọn lớp
+function onClassChange() {
+    const classId = document.getElementById("class_select").value;
+    if (!classId) return;
+
+    fetch(`/api/class_info/${classId}`)
+        .then(res => res.json())
+        .then(data => {
+            // Cập nhật giáo viên chủ nhiệm
+            document.getElementById("current_teacher_label").innerText = data.teacher_name;
+
+            // Đổ danh sách học sinh của lớp
+            const tbody = document.getElementById("available_student_table");
+            tbody.innerHTML = "";
+
+            data.students.forEach((student, index) => {
+                const row = document.createElement("tr");
+                row.setAttribute("available_student_id", student.id); // <- gán id để xử lý xóa
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${student.fullname}</td>
+                    <td>${student.dob}</td>
+                    <td>${student.gender}</td>
+                    <td>${student.address}</td>
+                    <td>${student.phone}</td>
+                    <td>${student.email}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="removeStudentFromClass(${student.id})">
+                            <i class="bi bi-x-circle"></i> Xóa
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        });
+}
+
+//Khi onclick btn Thêm học sinh
+function toggleAddStudent() {
+    const container = document.getElementById("unassigned_students_container");
+    const button = document.querySelector("button.btn-info");
+
+    if (container.style.display === "none") {
+        container.style.display = "block";
+        button.innerText = "Ẩn danh sách học sinh chưa có lớp";
+    } else {
+        container.style.display = "none";
+        button.innerText = "Thêm học sinh vào lớp";
+    }
+}
+
+function updateTableIndex(tableBodySelector, sttColumnIndex) {
+    const rows = document.querySelectorAll(`${tableBodySelector} tr`);
+    rows.forEach((row, index) => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length > sttColumnIndex) {
+            cells[sttColumnIndex].innerText = index + 1;
+        }
+    });
+}
+
+function removeStudentFromClass(studentId) {
+    const row = document.querySelector(`#available_student_table tr[available_student_id='${studentId}']`);
+    if (!row) return;
+
+    // Lấy thông tin học sinh từ các ô
+    const cells = row.querySelectorAll("td");
+    const fullname = cells[1].innerText;
+    const dob = cells[2].innerText;
+    const gender = cells[3].innerText;
+    const address = cells[4].innerText;
+    const phone = cells[5].innerText;
+    const email = cells[6].innerText;
+
+    // Tạo hàng mới ở bảng học sinh chưa có lớp
+    const newRow = document.createElement("tr");
+    newRow.innerHTML = `
+        <td><input type="checkbox" name="unassigned_student_id" value="${studentId}"></td>
+        <td>${studentId}</td>
+        <td>${fullname}</td>
+        <td>${dob}</td>
+        <td>${gender}</td>
+        <td>${address}</td>
+        <td>${phone}</td>
+        <td>${email}</td>
+    `;
+
+    // Hiện bảng nếu đang ẩn
+    const container = document.getElementById("unassigned_students_container");
+    container.style.display = "block";
+
+    // Thêm vào bảng chưa có lớp
+    container.querySelector("tbody").appendChild(newRow);
+
+    // Xóa khỏi danh sách lớp
+    row.remove();
+    updateTableIndex("#available_student_table", 0); // bảng lớp học: cột STT là 0
+    updateTableIndex("#unassigned_students_container tbody", 1); // chưa có lớp: cột STT là 1
+}
+
+function saveDraftEClass() {
+    const class_id = document.getElementById('class_select').value;
+    const teacher_id = document.getElementById('teacher').value;
+
+    // Danh sách học sinh hiện có trong lớp
+    const assigned_rows = document.querySelectorAll('#available_student_table tr[available_student_id]');
+    const assigned_student_ids = Array.from(assigned_rows).map(row => row.getAttribute('available_student_id'));
+
+    // Danh sách học sinh mới được chọn
+    const unassigned_student_ids = Array.from(document.querySelectorAll('input[name="unassigned_student_id"]:checked'))
+        .map(input => input.value);
+
+    const all_student_ids = [...new Set([...assigned_student_ids, ...unassigned_student_ids])];
+
+    const draft = {
+        class_id,
+        teacher_id,
+        student_ids: all_student_ids
+    };
+
+    localStorage.setItem(`draft_edit_class_${class_id}`, JSON.stringify(draft));
+
+    document.getElementById('responseMessage').innerText = 'Đã lưu nháp thành công!';
+}
+
+function saveEClass() {
+    const class_id = document.getElementById('class_select').value;
+    const teacher_id = document.getElementById('teacher').value;
+
+    //Lấy danh sách học sinh đang có trong lớp
+    const assigned_rows = document.querySelectorAll('#available_student_table tr[available_student_id]');
+    const assigned_student_ids = Array.from(assigned_rows).map(row => row.getAttribute('available_student_id'));
+
+    //Lấy học sinh mới được chọn (checkbox) từ danh sách chưa có lớp
+    const unassigned_student_ids = Array.from(document.querySelectorAll('input[name="unassigned_student_id"]:checked'))
+        .map(input => input.value);
+
+    //Gộp lại (tránh trùng lặp bằng Set)
+    const all_student_ids = [...new Set([...assigned_student_ids, ...unassigned_student_ids])];
+
+    //Gửi dữ liệu lên server
+    fetch('/api/save_edit_class', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            class_id,
+            teacher_id,
+            student_ids: all_student_ids
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('responseMessage').innerHTML = '<p style="color: green;">' + data.message + '</p>';
+        setTimeout(() => {
+            location.reload();  // 💡 Reload lại toàn bộ trang
+        }, 1500);
+    })
+    .catch(err => {
+        document.getElementById('responseMessage').innerHTML = '<p style="color: red;">Lỗi: ' + error.message + '</p>';
+    });
+}
+
+//--------------- END XỬ LÝ FORM ĐIỀU CHỈNH LỚP HỌC----------------------
