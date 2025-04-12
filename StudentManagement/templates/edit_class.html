@@ -67,7 +67,7 @@
             <table id="studentTable" class="display nowrap table table-bordered datatable" style="width:100%">
                 <thead>
                 <tr>
-                    <th><input type="checkbox" id="selectAllStudents" onclick="toggleSelectAll()"></th>
+                    <th><input type="checkbox" id="selectAllUnStudents" onclick="toggleSelectAll(selectAllUnStudents,'unassigned_student_id')"></th>
                     <th>STT</th>
                     <th>Họ và tên</th>
                     <th>Ngày sinh</th>
@@ -95,7 +95,6 @@
                 </tbody>
             </table>
         </div>
-
 
         <div class="btn-group d-flex justify-content-start gap-3 mt-3">
             <button type="button" class="btn btn-primary" onclick="saveEClass()">Lưu</button>

@@ -1,17 +1,13 @@
 import hashlib
-from models import User,GradeEnum,Teacher,Student,Teacher_Class,Class
+from models import User,GradeEnum,Teacher,Student,Class,Semester,SchoolYearEnum
 
-#--------------XỬ LÝ LOGIN---------------------------------------------------------|
+
 def get_user_by_id(user_id):
     return User.query.get(user_id)
 
 def auth_user(username, password):
     password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
     return User.query.filter(User.username.__eq__(username), User.password.__eq__(password)).first()
-
-#-------------- END XỬ LÝ LOGIN---------------------------------------------------------|
-
-#--------------XỬ LÝ LẬP DANH SÁCH LỚP---------------------------------------------------------|
 
 def load_gradeEnum():
     return {
@@ -35,9 +31,16 @@ def load_students_with_assign_status():
 def load_class():
     return Class.query.all()
 
+def load_semester():
+    return Semester.query.all()
+
 def load_unassigned_students():
     # Trả về danh sách các học sinh chưa thuộc bất kỳ lớp nào
     return Student.query.filter(~Student.classes.any()).all()
 
+def load_school_yearEnum():
+    return {
+        schoolyear.name: schoolyear.value  # "KHOI_10": "Khối 10"
+        for schoolyear in SchoolYearEnum
+    }
 
-#-------------- END XỬ LÝ LẬP DANH SÁCH LỚP---------------------------------------------------------|

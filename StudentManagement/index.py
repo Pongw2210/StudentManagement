@@ -1,13 +1,16 @@
 from types import new_class
+from typing import final
 
 from flask import Flask, render_template,request,redirect,session,jsonify
+from sqlalchemy.sql import func
+
 from StudentManagement import app,login,db,max_student
 from flask_login import current_user,login_user,logout_user
 import dao
 from datetime import datetime
 
-from models import Student, GradeEnum, Class,Teacher_Class,Student_Class
-
+from models import Student, GradeEnum, Class,Teacher_Class,Student_Class,\
+    Teacher,Subject_Teacher_Class,Subject,Score,ScoreTypeEnum
 
 @app.route('/')
 def home():
@@ -49,7 +52,6 @@ def user_info():
 @app.route('/register_student')
 def register_student():
     return render_template('register_student.html')
-
 
 def validateAge(dob):
     birth_date = datetime.strptime(dob, "%Y-%m-%d").date()
@@ -200,7 +202,7 @@ def save_edit_class():
     student_ids = data.get("student_ids", [])
 
     if not class_id:
-        return jsonify({'message': 'Thiếu thông tin lớp học!'}), 400
+        return jsonify({'message': 'Thiếu thông tin lớp học!'})
 
     try:
         # --- Cập nhật giáo viên chủ nhiệm ---
@@ -221,11 +223,198 @@ def save_edit_class():
             db.session.add(sc)
 
         db.session.commit()
-        return jsonify({'message': 'Cập nhật lớp học thành công!'}), 200
+        return jsonify({'message': 'Cập nhật lớp học thành công!'})
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': f'Lỗi khi cập nhật: {str(e)}'}), 500
+        return jsonify({'message': f'Lỗi khi cập nhật: {str(e)}'})
+
+@app.route('/update_score')
+def update_score():
+    grades=dao.load_gradeEnum()
+    semesters=dao.load_semester()
+    return render_template("update_score.html",grades=grades,semesters=semesters)
+
+@app.route('/api/get_classes_by_grade/<grade>', methods=['GET'])
+def get_classes_by_grade(grade):
+
+    grade_enum = GradeEnum[grade]
+    classes = Class.query.filter_by(grade=grade_enum).all()
+    result = [{'id': cls.id, 'name': cls.name} for cls in classes]
+    return jsonify(result)
+
+@app.route('/api/get_subject_by_teachID_classID/<int:class_id>', methods=['GET'])
+def get_subject_by_teachID_classID(class_id):
+    if not current_user.is_authenticated:
+        return {"error": "Unauthorized"}
+
+    teacher = Teacher.query.filter_by(user_id=current_user.id).first()
+    if not teacher:
+        return {"error": "Teacher not found"}
+
+    stc_list = Subject_Teacher_Class.query \
+        .filter_by(teacher_id=teacher.id, class_id=class_id) \
+        .join(Subject) \
+        .all()
+
+    result = [{"id": stc.subject.id, "name": stc.subject.name} for stc in stc_list]
+
+    return jsonify(result)
+
+@app.route('/api/save_update_score', methods=['POST'])
+def save_update_score():
+    data = request.get_json()
+
+    semester_id = data.get("semester_id")
+    subject_id = data.get("subject_id")
+    scores = data.get("scores", [])
+
+    if not semester_id or not subject_id:
+        return jsonify({"success": False, "message": "Các trường phải cập nhật đầy đủ"})
+
+    skipped_students = []  # Danh sách học sinh bị bỏ qua
+
+    try:
+        for s in scores:
+            student_id = s.get("student_id")
+
+            # Truy vấn điểm hiện có của học sinh đó
+            existing_scores = Score.query.filter_by(
+                student_id=student_id,
+                subject_id=subject_id,
+                semester_id=semester_id
+            ).all()
+
+            # Kiểm tra điều kiện
+            count_15 = sum(1 for score in existing_scores if score.score_type == ScoreTypeEnum.DIEM_15)
+            count_45 = sum(1 for score in existing_scores if score.score_type == ScoreTypeEnum.DIEM_45)
+            has_exam = any(score.score_type == ScoreTypeEnum.DIEM_THI for score in existing_scores)
+
+            if count_15 >= 5 or count_45 >= 3 or has_exam:
+                skipped_students.append(student_id)
+                continue  # Bỏ qua học sinh này
+
+            # Nếu chưa đủ, thêm điểm
+            for val in s.get("score15p", []):
+                if val is not None:
+                    db.session.add(Score(
+                        student_id=student_id,
+                        semester_id=semester_id,
+                        subject_id=subject_id,
+                        score=val,
+                        score_type=ScoreTypeEnum.DIEM_15,
+                    ))
+
+            for val in s.get("score45p", []):
+                if val is not None:
+                    db.session.add(Score(
+                        student_id=student_id,
+                        semester_id=semester_id,
+                        subject_id=subject_id,
+                        score=val,
+                        score_type=ScoreTypeEnum.DIEM_45,
+                    ))
+
+            # Thêm điểm thi nếu chưa có
+            exam_score = s.get("exam_score")
+            if exam_score is not None:
+                existing_exam_score = next(
+                    (score for score in existing_scores if score.score_type == ScoreTypeEnum.DIEM_THI),
+                    None
+                )
+                if not existing_exam_score:
+                    db.session.add(Score(
+                        student_id=student_id,
+                        semester_id=semester_id,
+                        subject_id=subject_id,
+                        score=exam_score,
+                        score_type=ScoreTypeEnum.DIEM_THI,
+                    ))
+
+        db.session.commit()
+
+        if skipped_students:
+            return jsonify({
+                "success": True,
+                "message": f"Cập nhật điểm thành công. {len(skipped_students)} học sinh đã đủ điểm nên bị bỏ qua.",
+                "skipped": skipped_students
+            })
+        else:
+            return jsonify({"success": True, "message": "Cập nhật điểm thành công."})
+
+    except Exception as ex:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Lỗi khi cập nhật: {str(ex)}'})
+
+@app.route('/export_score')
+def export_score():
+    schoolyears=dao.load_school_yearEnum()
+    grades=dao.load_gradeEnum()
+    return render_template("export_score.html",schoolyears=schoolyears,grades=grades)
+
+def calculate_avg_semester(student_id,semester_id):
+
+    #Lấy danh sách điểm 15' của 1 học tại 1 học kỳ--> chuyển thành mảng 1 chiều
+    avg_15=db.session.query(func.avg(Score.score)).filter_by(
+        student_id=student_id,
+        semester_id=semester_id,
+        score_type=ScoreTypeEnum.DIEM_15
+    ).scalar()
+    print(f"Điểm 45' học sinh {student_id} học kỳ {semester_id}: {avg_15}")  # Debug line
+
+    #Lấy danh sách điểm 45' của 1 học tại 1 học kỳ--> chuyển thành mảng 1 chiều
+    avg_45=db.session.query(func.avg(Score.score)).filter_by(
+        student_id=student_id,
+        semester_id=semester_id,
+        score_type=ScoreTypeEnum.DIEM_45
+    ).scalar()
+    print(f"Điểm 15' học sinh {student_id} học kỳ {semester_id}: {avg_45}")  # Debug line
+
+    exam_score=db.session.query(Score.score).filter_by(
+        student_id=student_id,
+        semester_id=semester_id,
+        score_type=ScoreTypeEnum.DIEM_THI
+    ).scalar()
+    print(f"Điểm thi học sinh {student_id} học kỳ {semester_id}: {exam_score}")  # Debug line
+
+    if avg_15 is not None and avg_45 is not None and exam_score is not None:
+        mid_avg=(avg_15*0.2+avg_45*0.3)
+        final_avg=round(mid_avg*0.5+ exam_score*0.5)
+    else:
+        final_avg=None
+
+    return final_avg
+
+@app.route('/api/get_score_by_class_id/<int:class_id>', methods=['GET'])
+def get_score_by_class_id(class_id):
+    cls = Class.query.get(class_id)
+    if not cls:
+        return jsonify({'error': 'Class not found'}), 404
+
+    result = []
+
+    for sc in cls.students:
+        student = sc.student
+
+        avg_hk1 = calculate_avg_semester(student.id,1)
+        avg_hk2 = calculate_avg_semester(student.id,2)
+
+        avg_total = round(((avg_hk1 or 0) + (avg_hk2 or 0)) / 2, 2) if avg_hk1 and avg_hk2 else None
+
+        result.append({
+            'id': student.id,
+            'fullname': student.fullname,
+            'class': cls.name,
+            'avg_semester1': avg_hk1,
+            'avg_semester2': avg_hk2,
+            'avg_total': avg_total
+        })
+
+    return jsonify(result)
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

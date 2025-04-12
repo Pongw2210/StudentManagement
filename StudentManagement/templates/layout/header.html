@@ -38,8 +38,8 @@
                             <li><a class="dropdown-item" href="/edit_class"> Điều chỉnh lớp học</a></li>
 
                             {%elif current_user.role.name=="GIAOVIEN"%}
-                            <li><a class="dropdown-item" href="#">Nhập điểm</a></li>
-                            <li><a class="dropdown-item" href="#"> Xuất điểm </a></li>
+                            <li><a class="dropdown-item" href="/update_score">Nhập điểm</a></li>
+                            <li><a class="dropdown-item" href="/export_score"> Xuất điểm </a></li>
 
                             {%elif current_user.role.name=="PHUHUYNH"%}
                             <li><a class="dropdown-item" href="#">Theo dõi kết quả</a></li>

@@ -2,7 +2,7 @@ from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import relationship
 from StudentManagement import app,db
 from enum import Enum as RoleEnum
-from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey, CheckConstraint,Float
 from datetime import datetime
 from flask_login import UserMixin
 import hashlib
@@ -18,6 +18,19 @@ class GradeEnum(RoleEnum):
     KHOI_11 = "Khối 11"
     KHOI_12 = "Khối 12"
 
+class ActiveEnum(RoleEnum):
+    DANGDAY = "Đang dạy"
+    DADAY = "Đã dạy"
+
+class ScoreTypeEnum(RoleEnum):
+    DIEM_15="Điểm 15 phút"
+    DIEM_45="Điểm 45 phút"
+    DIEM_THI="Điểm thi cuối kỳ"
+
+class SchoolYearEnum(RoleEnum):
+    N23_24 = "2023-2024"
+    N24_25="2024-2025"
+
 class Base(db.Model):
     __abstract__ = True
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -29,6 +42,27 @@ class Teacher_Class(db.Model):
     class_id = Column(Integer, ForeignKey('class.id'), primary_key=True)
     time = Column(DateTime, default=datetime.now())
 
+class Subject_Teacher_Class(db.Model):
+    __tablename__="subject_teacher_class"
+    __table_args__ = {'extend_existing': True}
+    teacher_id = Column(Integer, ForeignKey('teacher.id'), primary_key=True)
+    class_id = Column(Integer, ForeignKey('class.id'), primary_key=True)
+    subject_id=Column(Integer,ForeignKey('subject.id'),primary_key=True)
+    active= Column(Enum(ActiveEnum), default=ActiveEnum.DANGDAY)
+    start_date = Column(DateTime, default=datetime.now())
+    end_date = Column(DateTime, nullable=True)
+
+class Score(Base):
+    __tablename__="score"
+    student_id = Column(Integer, ForeignKey('student.id'))
+    semester_id = Column(Integer, ForeignKey('semester.id'))
+    subject_id=Column(Integer,ForeignKey('subject.id'))
+    score=Column(Float,nullable=True)
+    score_type=Column(Enum(ScoreTypeEnum),default=ScoreTypeEnum.DIEM_15)
+    __table_args__ = (
+        CheckConstraint('0 <= score <= 10', name='check_score'),
+        {'extend_existing': True}
+    )
 
 class Teacher(Base):
     __tablename__="teacher"
@@ -38,6 +72,7 @@ class Teacher(Base):
     gender=Column(String(10),nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=True)
     classes = relationship(Teacher_Class, backref="teacher", lazy=True)
+    subjects = relationship(Subject_Teacher_Class, backref="teacher", lazy=True)
 
 class Staff(Base):
     __tablename__="staff"
@@ -94,6 +129,7 @@ class Student(Base):
     phone=Column(String(10),nullable=False)
     email=Column(String(100),nullable=True)
     classes = relationship(Student_Class, backref="student", lazy=True)
+    scores=relationship(Score,backref="student",lazy=True)
 
 class Class(Base):
     __tablename__="class"
@@ -106,6 +142,17 @@ class Class(Base):
     grade=Column(Enum(GradeEnum))
     students = relationship(Student_Class, backref="class", lazy=True)
     teachers = relationship(Teacher_Class, backref="class", lazy=True)
+    subjects=relationship(Subject_Teacher_Class,backref="class",lazy=True)
+
+class Subject(Base):
+    __tablename__ = "subject"
+    name = Column(String(50), unique=True, nullable=False)
+    subject_teachers = relationship(Subject_Teacher_Class, backref="subject", lazy=True)
+
+class Semester(Base):
+    __tablename__ = "semester"
+    name = Column(String(50), nullable=False)
+    school_year = Column(Enum(SchoolYearEnum),nullable=False)
 
 if __name__ =="__main__":
     with app.app_context():
@@ -189,4 +236,72 @@ if __name__ =="__main__":
 
         teacher = Teacher(fullname="Tần Minh Thư", email="tmn@gmail.com", gender="Nam")
         db.session.add(teacher)
+        db.session.commit()
+
+        subjects = [
+            Subject(name="Toán"),
+            Subject(name="Ngữ Văn"),
+            Subject(name="Vật Lý"),
+            Subject(name="Hóa Học"),
+            Subject(name="Sinh Học"),
+            Subject(name="Lịch Sử"),
+            Subject(name="Địa Lý"),
+            Subject(name="Tiếng Anh"),
+            Subject(name="Giáo dục công dân"),
+            Subject(name="Tin học")
+        ]
+
+        db.session.add_all(subjects)
+        db.session.commit()
+
+        # Lấy danh sách các lớp, giáo viên và môn học
+        classes = {c.name: c for c in Class.query.all()}
+        teachers = {t.fullname: t for t in Teacher.query.all()}
+        subjects = {s.name: s for s in Subject.query.all()}
+
+        assignments = [
+            # Lớp 10A1
+            {"teacher": "Nguyễn Ngọc Anh", "subject": "Toán", "class": "10A1"},
+            {"teacher": "Phạm Ái Linh", "subject": "Ngữ Văn", "class": "10A1"},
+            {"teacher": "Lê Bảo An", "subject": "Vật Lý", "class": "10A1"},
+            {"teacher": "Đỗ Quang Khải", "subject": "Hóa Học", "class": "10A1"},
+            {"teacher": "Nguyễn Ngọc Anh", "subject": "Sinh Học", "class": "10A1"},
+
+            # Lớp 11A1
+            {"teacher": "Tần Minh Ngọc", "subject": "Toán", "class": "11A1"},
+            {"teacher": "Phạm Ái Linh", "subject": "Ngữ Văn", "class": "11A1"},
+            {"teacher": "Lê Bảo An", "subject": "Vật Lý", "class": "11A1"},
+            {"teacher": "Nguyễn Ngọc Anh", "subject": "Hóa Học", "class": "11A1"},
+            {"teacher": "Tần Minh Thư", "subject": "Sinh Học", "class": "11A1"},
+
+            # Lớp 12A1
+            {"teacher": "Tần Minh Ngọc", "subject": "Toán", "class": "12A1"},
+            {"teacher": "Nguyễn Ngọc Anh", "subject": "Ngữ Văn", "class": "12A1"},
+            {"teacher": "Lê Bảo An", "subject": "Vật Lý", "class": "12A1"},
+            {"teacher": "Đỗ Quang Khải", "subject": "Hóa Học", "class": "12A1"},
+            {"teacher": "Nguyễn Ngọc Anh", "subject": "Sinh Học", "class": "12A1"},
+        ]
+
+        for a in assignments:
+            teacher = teachers.get(a["teacher"])
+            subject = subjects.get(a["subject"])
+            lop = classes.get(a["class"])
+
+            if teacher and subject and lop:
+                stc = Subject_Teacher_Class(
+                    teacher_id=teacher.id,
+                    subject_id=subject.id,
+                    class_id=lop.id,
+                    active=ActiveEnum.DANGDAY.name,
+                    start_date=datetime.now()
+                )
+                db.session.add(stc)
+
+        db.session.commit()
+
+        semesters = [
+            Semester(name="HK1_2425",school_year=SchoolYearEnum.N24_25),
+            Semester(name="HK2_2425",school_year=SchoolYearEnum.N24_25)
+        ]
+        db.session.add_all(semesters)
         db.session.commit()
