@@ -1,5 +1,5 @@
 import hashlib
-from models import User,GradeEnum,Teacher,Student,Class,Semester,SchoolYearEnum
+from models import User,GradeEnum,Teacher,Student,Class,Semester,School_Year
 
 
 def get_user_by_id(user_id):
@@ -21,7 +21,6 @@ def load_teachers_with_assign_status():
         t.assigned = len(t.classes) > 0
     return teachers
 
-
 def load_students_with_assign_status():
     students = Student.query.all()
     for s in students:
@@ -38,9 +37,6 @@ def load_unassigned_students():
     # Trả về danh sách các học sinh chưa thuộc bất kỳ lớp nào
     return Student.query.filter(~Student.classes.any()).all()
 
-def load_school_yearEnum():
-    return {
-        schoolyear.name: schoolyear.value  # "KHOI_10": "Khối 10"
-        for schoolyear in SchoolYearEnum
-    }
+def load_school_year():
+    return School_Year.query.all()
 

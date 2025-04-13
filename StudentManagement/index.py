@@ -1,7 +1,5 @@
-from types import new_class
-from typing import final
 
-from flask import Flask, render_template,request,redirect,session,jsonify
+from flask import Flask, render_template,request,redirect,session,jsonify,send_file
 from sqlalchemy.sql import func
 
 from StudentManagement import app,login,db,max_student
@@ -10,7 +8,10 @@ import dao
 from datetime import datetime
 
 from models import Student, GradeEnum, Class,Teacher_Class,Student_Class,\
-    Teacher,Subject_Teacher_Class,Subject,Score,ScoreTypeEnum
+    Teacher,Subject_Teacher_Class,Subject,Score,ScoreTypeEnum,School_Year
+
+from io import BytesIO
+from openpyxl import Workbook
 
 @app.route('/')
 def home():
@@ -346,58 +347,56 @@ def save_update_score():
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Lỗi khi cập nhật: {str(ex)}'})
 
-@app.route('/export_score')
-def export_score():
-    schoolyears=dao.load_school_yearEnum()
-    grades=dao.load_gradeEnum()
-    return render_template("export_score.html",schoolyears=schoolyears,grades=grades)
 
-def calculate_avg_semester(student_id,semester_id):
-
-    #Lấy danh sách điểm 15' của 1 học tại 1 học kỳ--> chuyển thành mảng 1 chiều
-    avg_15=db.session.query(func.avg(Score.score)).filter_by(
+def calculate_avg_semester(student_id, semester_id):
+    avg_15 = db.session.query(func.avg(Score.score)).filter_by(
         student_id=student_id,
         semester_id=semester_id,
         score_type=ScoreTypeEnum.DIEM_15
     ).scalar()
-    print(f"Điểm 45' học sinh {student_id} học kỳ {semester_id}: {avg_15}")  # Debug line
+    print(f"Điểm 15' học sinh {student_id} học kỳ {semester_id}: {avg_15}")
 
-    #Lấy danh sách điểm 45' của 1 học tại 1 học kỳ--> chuyển thành mảng 1 chiều
-    avg_45=db.session.query(func.avg(Score.score)).filter_by(
+    avg_45 = db.session.query(func.avg(Score.score)).filter_by(
         student_id=student_id,
         semester_id=semester_id,
         score_type=ScoreTypeEnum.DIEM_45
     ).scalar()
-    print(f"Điểm 15' học sinh {student_id} học kỳ {semester_id}: {avg_45}")  # Debug line
+    print(f"Điểm 45' học sinh {student_id} học kỳ {semester_id}: {avg_45}")
 
-    exam_score=db.session.query(Score.score).filter_by(
+    exam_score = db.session.query(Score.score).filter_by(
         student_id=student_id,
         semester_id=semester_id,
         score_type=ScoreTypeEnum.DIEM_THI
     ).scalar()
-    print(f"Điểm thi học sinh {student_id} học kỳ {semester_id}: {exam_score}")  # Debug line
+    print(f"Điểm thi học sinh {student_id} học kỳ {semester_id}: {exam_score}")
 
     if avg_15 is not None and avg_45 is not None and exam_score is not None:
-        mid_avg=(avg_15*0.2+avg_45*0.3)
-        final_avg=round(mid_avg*0.5+ exam_score*0.5)
+        mid_avg = avg_15 * 0.2 + avg_45 * 0.3
+        final_avg = round(mid_avg * 0.5 + exam_score * 0.5, 2)  # ⚠️ Giữ 2 chữ số thập phân
     else:
-        final_avg=None
+        final_avg = None
 
     return final_avg
 
-@app.route('/api/get_score_by_class_id/<int:class_id>', methods=['GET'])
-def get_score_by_class_id(class_id):
+@app.route('/api/get_score_by_class_id/<int:class_id>/<int:school_year_id>', methods=['GET'])
+def get_score_by_class_id(class_id,school_year_id):
     cls = Class.query.get(class_id)
-    if not cls:
-        return jsonify({'error': 'Class not found'}), 404
+    school_year=School_Year.query.get(school_year_id)
+    if not cls or not school_year:
+        return jsonify({'error': 'Không tim thấy lớp hoặc năm học'})
 
+    for s in school_year.semesters:
+        print(s.id, s.name)
+    semesters=school_year.semesters
+    semester1 = next((s for s in semesters if s.name.startswith("HK1")), None)
+    semester2 = next((s for s in semesters if s.name.startswith("HK2")), None)
     result = []
 
     for sc in cls.students:
         student = sc.student
 
-        avg_hk1 = calculate_avg_semester(student.id,1)
-        avg_hk2 = calculate_avg_semester(student.id,2)
+        avg_hk1 = calculate_avg_semester(student.id, semester1.id) if semester1 else None
+        avg_hk2 = calculate_avg_semester(student.id, semester2.id) if semester2 else None
 
         avg_total = round(((avg_hk1 or 0) + (avg_hk2 or 0)) / 2, 2) if avg_hk1 and avg_hk2 else None
 
@@ -409,12 +408,59 @@ def get_score_by_class_id(class_id):
             'avg_semester2': avg_hk2,
             'avg_total': avg_total
         })
+    print("====== TỔNG KẾT ======")
+    for item in result:
+        print(item)
 
     return jsonify(result)
 
+@app.route('/api/export_score', methods=['POST'])
+def export_score():
+    school_year_id = request.form.get('schoolyears')
+    class_id = request.form.get('class_id')
 
+    cls = Class.query.get(class_id)
+    school_year = School_Year.query.get(school_year_id)
 
+    if not cls or not school_year:
+        return jsonify({'error': 'Không tìm thấy lớp hoặc năm học'}), 404
 
+    # Khởi tạo workbook và worksheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Bảng Điểm"
+
+    # Thêm tiêu đề cho các cột
+    ws.append(["STT", "Họ và tên", "Điểm trung bình HK1", "Điểm trung bình HK2", "Điểm tổng kết"])
+
+    # Lặp qua học sinh trong lớp để lấy điểm
+    for index, sc in enumerate(cls.students, start=1):
+        student = sc.student
+        avg_hk1 = calculate_avg_semester(student.id, 1)
+        avg_hk2 = calculate_avg_semester(student.id, 2)
+        avg_total = round(((avg_hk1 or 0) + (avg_hk2 or 0)) / 2, 2) if avg_hk1 and avg_hk2 else None
+
+        # Thêm thông tin học sinh vào sheet
+        ws.append([
+            index,
+            student.fullname,
+            avg_hk1 if avg_hk1 is not None else "-",
+            avg_hk2 if avg_hk2 is not None else "-",
+            avg_total if avg_total is not None else "-"
+        ])
+
+    # Lưu workbook vào bộ nhớ và gửi file cho người dùng
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(output, as_attachment=True, download_name="bang_diem.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@app.route('/export_score')
+def export_score_form():
+    schoolyears=dao.load_school_year()
+    grades=dao.load_gradeEnum()
+    return render_template("export_score.html",schoolyears=schoolyears,grades=grades)
 
 if __name__ == '__main__':
     app.run(debug=True)

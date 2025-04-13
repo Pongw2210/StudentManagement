@@ -27,10 +27,6 @@ class ScoreTypeEnum(RoleEnum):
     DIEM_45="Điểm 45 phút"
     DIEM_THI="Điểm thi cuối kỳ"
 
-class SchoolYearEnum(RoleEnum):
-    N23_24 = "2023-2024"
-    N24_25="2024-2025"
-
 class Base(db.Model):
     __abstract__ = True
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -152,7 +148,12 @@ class Subject(Base):
 class Semester(Base):
     __tablename__ = "semester"
     name = Column(String(50), nullable=False)
-    school_year = Column(Enum(SchoolYearEnum),nullable=False)
+    school_year_id = Column(Integer, ForeignKey('school_year.id'))
+
+class School_Year(Base):
+    __tablename__="school_year"
+    name = Column(String(50), nullable=False)
+    semesters=relationship(Semester, backref="school_year", lazy=True)
 
 if __name__ =="__main__":
     with app.app_context():
@@ -299,9 +300,16 @@ if __name__ =="__main__":
 
         db.session.commit()
 
+        school_years = [
+            School_Year(name="2023-2024"),
+            School_Year(name="2024-2025")
+        ]
+        db.session.add_all(school_years)
+        db.session.commit()
+
         semesters = [
-            Semester(name="HK1_2425",school_year=SchoolYearEnum.N24_25),
-            Semester(name="HK2_2425",school_year=SchoolYearEnum.N24_25)
+            Semester(name="HK1_2425",school_year_id=school_years[1].id),
+            Semester(name="HK2_2425",school_year_id=school_years[1].id)
         ]
         db.session.add_all(semesters)
         db.session.commit()

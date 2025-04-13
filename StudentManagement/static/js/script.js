@@ -1,4 +1,3 @@
-//---------------XỬ LÝ FORM TIẾP NHẬN HỌC SINH----------------------
 function cancelAll(){
     if(confirm("Bạn có chắc chắn hủy phiên làm việc không!")==true){
          window.location = "http://127.0.0.1:5000/";
@@ -11,6 +10,7 @@ function deleteAll(id_form){
     }
 }
 
+//---------------XỬ LÝ FORM TIẾP NHẬN HỌC SINH----------------------
 // Hàm lưu nháp
 function saveDraftStudent() {
     localStorage.setItem('draftFullname', document.getElementById("fullname").value);
@@ -639,81 +639,83 @@ function removeScore45p() {
         row.deleteCell(score45pIndex);
     }
 }
-//
-//function saveDraftUpdateScore() {
-//    const students = document.querySelectorAll('#studentTable_class tbody tr');
-//    const draftData = [];
-//
-//    students.forEach((studentRow) => {
-//        const studentId = studentRow.getAttribute('available_student_id');
-//        const score15Inputs = studentRow.querySelectorAll('input[name^="score15p_"]');
-//        const score45Inputs = studentRow.querySelectorAll('input[name^="score45p_"]');
-//        const examScoreInput = studentRow.querySelector('input[name^="examScore"]');
-//
-//        // Lưu điểm vào draftData
-//        const score15p = Array.from(score15Inputs).map(input => input.value ? parseFloat(input.value) : null);
-//        const score45p = Array.from(score45Inputs).map(input => input.value ? parseFloat(input.value) : null);
-//        const examScore = examScoreInput ? (examScoreInput.value ? parseFloat(examScoreInput.value) : null) : null;
-//
-//        draftData.push({
-//            student_id: studentId,
-//            score15p: score15p,
-//            score45p: score45p,
-//            exam_score: examScore
-//        });
-//    });
-//
-//    const draft = {
-//        semester_id: document.getElementById('semester').value,
-//        subject_id: document.getElementById('subject_select').value,
-//        class_id: document.getElementById('class_select').value,
-//        scores: draftData
-//    };
-//
-//    // Lưu nháp vào localStorage
-//    localStorage.setItem('scoreDraft', JSON.stringify(draft));
-//
-//    alert('Thông tin đã được lưu nháp!');
-//}
-//
-//document.addEventListener("DOMContentLoaded", function() {
-//const draftJSON = localStorage.getItem('scoreDraft');
-//    if (!draftJSON) return;
-//
-//    const draft = JSON.parse(draftJSON);
-//
-//    // Điền dữ liệu vào các select
-//    document.getElementById('semester').value = draft.semester_id;
-//    document.getElementById('subject_select').value = draft.subject_id;
-//    document.getElementById('class_select').value = draft.class_id;
-//
-//    // Sau khi load class -> gọi lại onClassScoreChange để render bảng student
-//    onClassScoreChange();
-//
-//    setTimeout(() => {
-//        draft.scores.forEach((item) => {
-//            const studentRow = document.querySelector(`tr[available_student_id="${item.student_id}"]`);
-//            if (studentRow) {
-//                const score15Inputs = studentRow.querySelectorAll('input[name^="score15p_"]');
-//                const score45Inputs = studentRow.querySelectorAll('input[name^="score45p_"]');
-//                const examScoreInput = studentRow.querySelector('input[name^="examScore"]');
-//
-//                // Điền lại điểm 15 phút
-//                item.score15p.forEach((val, i) => {
-//                    if (score15Inputs[i]) score15Inputs[i].value = val ?? '';
-//                });
-//
-//                // Điền lại điểm 45 phút
-//                item.score45p.forEach((val, i) => {
-//                    if (score45Inputs[i]) score45Inputs[i].value = val ?? '';
-//                });
-//
-//                // Điền lại điểm thi
-//                if (examScoreInput) examScoreInput.value = item.exam_score ?? '';
-//            }
-//        });
-//    }, 500); // delay nhẹ để bảng student load xong mới gán
-//});
+
+function saveDraftUpdateScore() {
+    const students = document.querySelectorAll('#studentTable_class tbody tr');
+    const draftData = [];
+
+    students.forEach((studentRow) => {
+        const studentId = studentRow.getAttribute('available_student_id');
+        const score15Inputs = studentRow.querySelectorAll('input[name^="score15p_"]');
+        const score45Inputs = studentRow.querySelectorAll('input[name^="score45p_"]');
+        const examScoreInput = studentRow.querySelector('input[name^="examScore"]');
+
+        // Lưu điểm vào draftData
+        const score15p = Array.from(score15Inputs).map(input => input.value ? parseFloat(input.value) : null);
+        const score45p = Array.from(score45Inputs).map(input => input.value ? parseFloat(input.value) : null);
+        const examScore = examScoreInput ? (examScoreInput.value ? parseFloat(examScoreInput.value) : null) : null;
+
+        draftData.push({
+            student_id: studentId,
+            score15p: score15p,
+            score45p: score45p,
+            exam_score: examScore
+        });
+    });
+
+    const draft = {
+        semester_id: document.getElementById('semester').value,
+        subject_id: document.getElementById('subject_select').value,
+        class_id: document.getElementById('class_select').value,
+        scores: draftData
+    };
+
+    // Lưu nháp vào localStorage
+    localStorage.setItem('scoreDraft', JSON.stringify(draft));
+
+    alert('Thông tin đã được lưu nháp!');
+}
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    const draftJSON = localStorage.getItem('scoreDraft');
+    if (!draftJSON) return;
+
+    const draft = JSON.parse(draftJSON);
+
+    // Điền dữ liệu vào các select
+    document.getElementById('semester').value = draft.semester_id;
+    document.getElementById('subject_select').value = draft.subject_id;
+    document.getElementById('class_select').value = draft.class_id;
+
+    // Sau khi load class -> gọi lại onClassScoreChange để render bảng student
+    onClassScoreChange();
+
+    setTimeout(() => {
+        draft.scores.forEach((item) => {
+            const studentRow = document.querySelector(`tr[available_student_id="${item.student_id}"]`);
+            if (studentRow) {
+                const score15Inputs = studentRow.querySelectorAll('input[name^="score15p_"]');
+                const score45Inputs = studentRow.querySelectorAll('input[name^="score45p_"]');
+                const examScoreInput = studentRow.querySelector('input[name^="examScore"]');
+
+                // Điền lại điểm 15 phút
+                item.score15p.forEach((val, i) => {
+                    if (score15Inputs[i]) score15Inputs[i].value = val ?? '';
+                });
+
+                // Điền lại điểm 45 phút
+                item.score45p.forEach((val, i) => {
+                    if (score45Inputs[i]) score45Inputs[i].value = val ?? '';
+                });
+
+                // Điền lại điểm thi
+                if (examScoreInput) examScoreInput.value = item.exam_score ?? '';
+            }
+        });
+    }, 500); // delay nhẹ để bảng student load xong mới gán
+});
+
 
 function saveUpdateScore() {
     // Chọn tất cả các dòng tr trong phần thân của bảng
@@ -775,7 +777,7 @@ function saveUpdateScore() {
 
             setTimeout(() => {
                 location.reload();
-            }, 3000);
+            }, 30000);
         } else {
             document.getElementById('responseMessage').innerHTML =
                 `<p style="color: red;">${data.message}</p>`;
@@ -793,12 +795,13 @@ function saveUpdateScore() {
 //--------------- XỬ LÝ FORM XUẤT ĐIỂM------------------------------------
 function onClassExportScoreChange() {
     const classId = document.getElementById("class_select").value;
-    if (!classId) return;
+    const school_year_id = document.getElementById("schoolyears").value;
+    if (!classId||!school_year_id) return;
 
     const tbody = document.getElementById("available_student_table");
-    tbody.innerHTML = "<tr><td colspan='5'>Đang tải...</td></tr>"; // Hiển thị thông báo tải
+    tbody.innerHTML = "";
 
-    fetch(`/api/get_score_by_class_id/${classId}`)
+    fetch(`/api/get_score_by_class_id/${classId}/${school_year_id}`)
         .then(res => res.json())
         .then(data => {
             tbody.innerHTML = ""; // Xóa thông báo tải
@@ -828,5 +831,35 @@ function onClassExportScoreChange() {
             tbody.innerHTML = "<tr><td colspan='5'>Lỗi khi tải dữ liệu</td></tr>";
         });
 }
+
+function exportScore() {
+    const form = document.getElementById("form_export_score");
+    const formData = new FormData(form);
+
+    fetch("/api/export_score", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Lỗi khi xuất bảng điểm');
+        }
+        return response.blob();  // Nhận file Excel từ server
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'bang_diem.xlsx';  // Tên file tải về
+        a.click();
+        window.URL.revokeObjectURL(url);  // Giải phóng tài nguyên
+    })
+    .catch(error => {
+        console.error("Lỗi khi xuất bảng điểm:", error);
+        alert("Đã có lỗi xảy ra khi xuất bảng điểm. Vui lòng thử lại!");
+    });
+}
+
+
 
 //--------------- END XỬ LÝ FORM XUẤT ĐIỂM------------------------------------

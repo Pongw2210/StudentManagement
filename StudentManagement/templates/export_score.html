@@ -7,11 +7,11 @@
 
     <form id="form_export_score" method="POST" action="{{ url_for('export_score') }}">
         <div class="mb-3">
-            <label for="schoolyear">Năm học:</label>
+            <label>Năm học:</label>
             <select name="schoolyears" id="schoolyears" required>
                 <option value="">-- Chọn năm học --</option>
-                {% for key, label in schoolyears.items() %}
-                <option value="{{ key }}">{{ label }}</option>
+                {% for s in schoolyears %}
+                <option value="{{ s.id }}">{{ s.name }}</option>
                 {% endfor %}
             </select>
 
@@ -45,7 +45,6 @@
                 </tbody>
             </table>
             <div class="btn-group d-flex justify-content-start gap-3 mt-3">
-                <button type="button" class="btn btn-success" onclick="saveDraftExportScore()">Lưu nháp</button>
                 <button type="button" class="btn btn-warning" onclick="deleteAll('form_export_score')">Xóa tất cả
                 </button>
                 <button type="button" class="btn btn-danger" onclick="cancelAll()">Hủy</button>
