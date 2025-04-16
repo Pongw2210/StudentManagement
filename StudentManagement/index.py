@@ -240,7 +240,15 @@ def update_score():
     grades=dao.load_gradeEnum()
     semesters=dao.load_semester()
     return render_template("update_score.html",grades=grades,semesters=semesters)
+@app.route('/api/get_students_by_class/<int:class_id>', methods=['GET'])
+def get_students_by_class(class_id):
+    cls = Class.query.get(class_id)
+    if not cls:
+        return jsonify({'error': 'Class not found'}), 404
 
+    students = cls.students
+    result = [{'id': sc.student.id, 'fullname': sc.student.fullname} for sc in students]
+    return jsonify(result)
 @app.route('/api/get_classes_by_grade/<grade>', methods=['GET'])
 def get_classes_by_grade(grade):
 
@@ -418,6 +426,24 @@ def get_score_by_class_id(class_id,school_year_id):
 
     return jsonify(result)
 
+
+@app.route('/export_score')
+def export_score_form():
+    schoolyears = dao.load_school_year()
+    grades=dao.load_gradeEnum()
+    return render_template("export_score.html",schoolyears=schoolyears,grades=grades)
+
+@app.route('/api/fetch_classes_by_grade/<grade>')
+def fetch_classes_by_grade(grade):
+    try:
+        grade = int(grade)  # Chuyển grade thành integer
+        classes = Class.query.filter_by(grade=grade).all()
+        if not classes:
+            return jsonify([])
+        return jsonify([{'id': cls.id, 'name': cls.name} for cls in classes])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/export_score', methods=['POST'])
 def export_score():
     school_year_id = request.form.get('schoolyears')
@@ -459,13 +485,6 @@ def export_score():
     output.seek(0)
 
     return send_file(output, as_attachment=True, download_name="bang_diem.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-@app.route('/export_score')
-def export_score_form():
-    schoolyears = dao.load_school_year()
-    grades=dao.load_gradeEnum()
-    return render_template("export_score.html",schoolyears=schoolyears,grades=grades)
-
 
 if __name__ == '__main__':
     from StudentManagement.admin import *
