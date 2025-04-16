@@ -4,7 +4,7 @@ from flask_admin import Admin, BaseView, expose
 from flask_login import current_user, logout_user
 from wtforms.fields import SelectField
 from flask import redirect, request, jsonify
-from models import UserEnum, Student,Subject, User, Regulation
+from models import UserEnum, Student, Subject, User, Regulation, Semester,School_Year
 
 admin=Admin(app=app,name="Student Management",template_mode='bootstrap4')
 
@@ -92,41 +92,50 @@ def get_semesters_by_year(year_id):
 class StatsView(BaseView):
     @expose('/', methods=['GET', 'POST'])
     def index(self):
+        semester_name = subject_name = school_year_name = None  # Khởi tạo mặc định tránh lỗi
+
         if request.method == 'POST':
-            # Lấy giá trị từ form sử dụng request.form.get()
             semester_id = int(request.form.get("semester_id"))
             subject_id = int(request.form.get("subject_id"))
+            year_school_id = int(request.form.get("year_school_id"))
+
+            # Lấy tên từ id
+            semester = Semester.query.get(semester_id)
+            subject = Subject.query.get(subject_id)
+            school_year = School_Year.query.get(year_school_id)
+
+            semester_name = semester.name if semester else None
+            subject_name = subject.name if subject else None
+            school_year_name = school_year.name if school_year else None
         else:
-            semester_id = subject_id = None  # Nếu là GET, không có giá trị mặc định
+            semester_id = subject_id = None
 
         # Lấy danh sách môn học và năm học
         subjects = dao.load_subject()
         school_years = dao.load_school_year()
 
-        # Kiểm tra nếu có semester_id và subject_id, và lấy thống kê
         if semester_id and subject_id:
             stats = utils.subject_summary_report(semester_id, subject_id)
-
-            # Nếu không có dữ liệu thống kê
-            if not stats:
-                stats_error_message = "Không có dữ liệu thống kê cho môn học và học kỳ đã chọn."
-            else:
-                stats_error_message = None
+            stats_error_message = None if stats else "Không có dữ liệu thống kê cho môn học và học kỳ đã chọn."
         else:
-            stats = []  # Nếu không có semester_id và subject_id, không lấy được dữ liệu thống kê
+            stats = []
             stats_error_message = "Vui lòng chọn cả môn học và học kỳ."
 
-        # Render lại trang với dữ liệu
         return self.render('admin/stats.html',
                            stats=stats,
                            subjects=subjects,
                            school_years=school_years,
-                           stats_error_message=stats_error_message)
+                           stats_error_message=stats_error_message,
+                           semester_name=semester_name,
+                           subject_name=subject_name,
+                           school_year_name=school_year_name)
 
     def is_accessible(self):
         return current_user.is_authenticated and current_user.role == UserEnum.ADMIN
 
 
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == UserEnum.ADMIN
 
 
 
