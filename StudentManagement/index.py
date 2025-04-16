@@ -1,18 +1,21 @@
-
 from flask import Flask, render_template,request,redirect,session,jsonify,send_file
 from sqlalchemy.sql import func
 
-from StudentManagement import app,login,db,max_student
+from StudentManagement import app,login,db,min_age,max_age,max_student
 from flask_login import current_user,login_user,logout_user
 import dao
 from datetime import datetime
 
-from models import Student, GradeEnum, Class,Teacher_Class,Student_Class,\
-    Teacher,Subject_Teacher_Class,Subject,Score,ScoreTypeEnum,School_Year
+from models import Student, GradeEnum, Class, Teacher_Class, Student_Class, \
+    Teacher, Subject_Teacher_Class, Subject, Score, ScoreTypeEnum, School_Year, UserEnum, Semester
 
 from io import BytesIO
 from openpyxl import Workbook
 
+import warnings
+from sqlalchemy.exc import SAWarning
+
+warnings.filterwarnings('ignore', category=SAWarning)
 @app.route('/')
 def home():
     return render_template("index.html")
@@ -31,6 +34,8 @@ def login_my_user():
 
         if user:
             login_user(user)
+            if user.role == UserEnum.ADMIN:
+                return redirect('/admin')
             return redirect('/')
         else:
             err_msg = "Tài khoản hoặc mật khẩu không khớp!"
@@ -60,7 +65,7 @@ def validateAge(dob):
 
     age = today.year - birth_date.year
 
-    return 15 <= age <= 20
+    return min_age <= age <= max_age
 
 @app.route('/api/save_student', methods=['POST'])
 def save_student():
@@ -134,7 +139,7 @@ def save_class():
         return jsonify({"success": False, "message": "Tất cả các trường phải được điền đầy đủ!"})
 
     # Kiểm tra nếu số lượng học sinh đã chọn vượt quá sĩ số lớp
-    if len(student_ids) > max_student:
+    if len(student_ids) >max_student:
         return jsonify({'success': False, 'message': 'Số lượng học sinh 1 lớp không quá 40 học sinh'})
 
     # Kiểm tra xem lớp học đã tồn tại chưa
@@ -347,7 +352,6 @@ def save_update_score():
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Lỗi khi cập nhật: {str(ex)}'})
 
-
 def calculate_avg_semester(student_id, semester_id):
     avg_15 = db.session.query(func.avg(Score.score)).filter_by(
         student_id=student_id,
@@ -458,9 +462,12 @@ def export_score():
 
 @app.route('/export_score')
 def export_score_form():
-    schoolyears=dao.load_school_year()
+    schoolyears = dao.load_school_year()
     grades=dao.load_gradeEnum()
     return render_template("export_score.html",schoolyears=schoolyears,grades=grades)
 
+
 if __name__ == '__main__':
+    from StudentManagement.admin import *
+
     app.run(debug=True)

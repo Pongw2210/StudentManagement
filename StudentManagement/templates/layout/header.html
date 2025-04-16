@@ -20,9 +20,6 @@
                             {{ current_user.staff.fullname }}
                             {% elif current_user.parent %}
                             {{ current_user.parent.fullname }}
-                            {% elif current_user.admin %}
-                            {{ current_user.admin.fullname }}
-                            {% else %}
                             {{ current_user.username }}
                             {% endif %}
                         </a>
